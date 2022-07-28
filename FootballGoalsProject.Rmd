@@ -1,0 +1,147 @@
+---
+title: "Football Superstars: Comparing the Top 20 Goal Scorers of Europe's Top 5 Leagues (21/22)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+library(data.table)
+
+df <- read.csv("Football Stats Total.csv", check.names=FALSE)
+```
+Top 20 Ranking
+===================================== 
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Total Shots by Total Goals
+
+```{r}
+ts_sp <- plot_ly(df, x= ~df$`Total Shots`, y= ~df$`Total Goals`, type = "scatter", mode = "markers", text = ~paste(Player)) %>%
+  layout(xaxis = list(title = 'Total Shots'), yaxis = list(title = 'Total Goals'))
+                        
+ts_sp
+
+```
+
+### Total Shots by Total Goals (Per 90 Minutes)
+
+```{r}
+ts90_sp <- plot_ly(df, x= ~df$`Total Shots Per 90`, y= ~df$`Total Goals Per 90`, type = "scatter", color = "red", mode = "markers", text = ~paste(Player)) %>%
+  layout(xaxis = list(title = 'Total Shots Per 90'), yaxis = list(title = 'Total Goals Per 90'))
+                        
+ts90_sp
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Total Goals
+
+```{r}
+tg <- ggplot(df, aes(x= `Total Goals`, y= reorder(`Player`, `Total Goals`))) + 
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(y = "Player") +
+  theme_grey()
+
+ggplotly(tg)
+```
+
+### Total Goals (Per 90 Minutes)
+
+```{r}
+tg90 <- ggplot(df, aes(x= `Total Goals Per 90`, y= reorder(`Player`, `Total Goals Per 90`))) + 
+  geom_bar(stat = "identity", fill = "red") +
+  labs(y = "Player") +
+  theme_grey()
+
+ggplotly(tg90)
+```
+
+Positions {data-orientation=rows}
+===================================== 
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Change in Top 10 Position from Total Goals to Total Goals Per 90 Minutes
+
+```{r}
+Measure <- c("Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins",
+               "Total Goals", "Total Goals Per 90 Mins")
+Position <- c(1, 1, 2, 8, 3, 4, 4, 6, 5, 5, 6, 2, 7, 12, 8, 11, 9, 3, 10, 7)
+Player <- factor(c("Robert Lewandowski", "Robert Lewandowski",
+            "Kylian Mbappe", "Kylian Mbappe", 
+            "Karim Benzema", "Karim Benzema", 
+            "Ciro Immobile", "Ciro Immobile",
+            "Wissam Ben Yedder", "Wissam Ben Yedder",
+            "Patrik Schick", "Patrik Schick",
+            "Son Heung-Min", "Son Heung-Min",
+            "Mohamed Salah", "Mohamed Salah",
+            "Erling Haaland", "Erling Haaland",
+            "Moussa Dembele", "Moussa Dembele"),
+            levels = c("Robert Lewandowski", "Kylian Mbappe", "Karim Benzema", 
+                       "Ciro Immobile", "Wissam Ben Yedder", "Patrik Schick", 
+                       "Son Heung-Min", "Mohamed Salah", "Erling Haaland", "Moussa Dembele"))
+
+
+df2 <- data.frame(x = Measure,
+                 y = Position,
+                 group = Player)
+
+bump <- ggplot(df2, aes(x= Measure, y = Position, group = Player)) +
+  geom_line(aes(color = Player), size = 2) +
+  geom_point(aes(color = Player), size = 4) +
+  scale_y_reverse(breaks = 1:nrow(df2)) + 
+  scale_color_manual(values = c("#F70020","#191A1A","#FB9701","#1A7D00","#072C8F","deeppink", "darkviolet", "chocolate", "springgreen", "cyan"))
+
+ggplotly(bump)
+```
+
+### Location of Goal per Player
+
+```{r}
+df3 <- subset(df, select = c(Player, `Six Yard Box Goals`, `Penalty Area Goals`, `Out Of Box Goals`))
+long <- melt(setDT(df3), id.vars = c("Player"), variable.name = "Type of Shot")
+
+stack <- ggplot(long, aes(fill=`Type of Shot`, y=reorder(Player, value), x=value)) +
+  geom_bar(position="stack", stat="identity") +
+  labs(y = "Player", x = "Total Goals")
+ggplotly(stack)
+```
+
+Takeaways & References {data-orientation=rows}
+===================================== 
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### Takeaways & Reference
+
+- Robert Lewandowski is the best scorer out of the top 20, due to having the most shots and most goals in total and per 90 minutes
+
+- Certain players like Patrik Schick and Erling Haaland are very close to Lewandowski for Total Goals per 90 in comparison with Total Goals, suggesting they are nearly as prolific goalscorers in the minutes they have played
+
+- Majority of the goals come from the Penalty Area
+
+- Data was sourced from WhoScored.com
+
+- WhoScored.com (2022). Football Statistics. https://www.whoscored.com/Statistics
+
+‌
+
+```
